@@ -1,0 +1,80 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!--
+        Alter configuration below as needed.
+    -->
+    <bean id="flinkcache-cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+
+        <!--<property name="clientMode" value="true"/>-->
+
+
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="dataRegionConfigurations">
+                    <list>
+
+                        <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                            <!-- Custom region name. -->
+                            <property name="name" value="Data_Region"/>
+
+                            <!-- 4 GB initial size. -->
+                            <property name="initialSize" value="#{1L * 1024 * 1024 * 1024}"/>
+
+                            <!-- 24 GB maximum size. -->
+                            <property name="maxSize" value="#{2L * 1024 * 1024 * 1024}"/>
+
+                            <!-- Turn off persistence, default = false. -->
+                            <property name="persistenceEnabled" value="false"/>
+                        </bean>
+                    </list>
+                </property>
+            </bean>
+        </property>
+
+
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="dataRegionName" value="Data_Region"/>
+
+                    <property name="name" value="DemoCache"/>
+
+                    <property name="cacheMode" value="PARTITIONED"/>
+
+                    <property name="atomicityMode" value="ATOMIC"/>
+
+                    <property name="backups" value="0"/>
+
+                    <property name="statisticsEnabled" value="true"/>
+
+                    <property name="indexedTypes">
+                        <array value-type="java.lang.Class">
+                            <value>java.lang.String</value>
+                            <value>java.lang.String</value>
+                        </array>
+                    </property>
+
+                </bean>
+            </list>
+        </property>
+
+        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                        <property name="addresses">
+                            <list>
+                                <value>127.0.0.1:47500</value>
+                            </list>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+
+    </bean>
+</beans>
