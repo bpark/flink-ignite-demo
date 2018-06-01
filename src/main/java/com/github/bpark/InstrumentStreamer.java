@@ -1,4 +1,4 @@
-package org.myorg.quickstart;
+package com.github.bpark;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
