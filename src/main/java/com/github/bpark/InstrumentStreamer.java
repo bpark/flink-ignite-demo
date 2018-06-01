@@ -21,7 +21,6 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
-import org.apache.ignite.sink.flink.IgniteSink;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +35,8 @@ public class InstrumentStreamer {
     private static final String ID_TMPL = "%s##%s";
 
     public static void main(String[] args) throws Exception {
+
+        System.setProperty("IGNITE_QUIET", "false");
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
