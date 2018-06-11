@@ -42,7 +42,7 @@ public class InstrumentStreamer {
         env.setParallelism(1);
         env.getConfig().enableSysoutLogging();
 
-        IgniteSink<Map<String, String>> igniteSink = new IgniteSink<>("DemoCache", "flink-config.xml");
+        IgniteSink<Map<String, String>> igniteSink = new IgniteSink<>();
         igniteSink.setAllowOverwrite(true);
         igniteSink.setAutoFlushFrequency(10);
 

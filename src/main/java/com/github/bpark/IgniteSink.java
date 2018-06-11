@@ -2,7 +2,6 @@ package com.github.bpark;
 
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.ignite.*;
-import org.apache.ignite.internal.util.typedef.internal.A;
 
 import java.util.Map;
 
@@ -24,30 +23,6 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
 
     /** Flag for stopped state. */
     private static volatile boolean stopped = true;
-
-    /** Ignite grid configuration file. */
-    private static String igniteCfgFile;
-
-    /** Cache name. */
-    private static String cacheName;
-
-    /**
-     * Gets the cache name.
-     *
-     * @return Cache name.
-     */
-    public String getCacheName() {
-        return cacheName;
-    }
-
-    /**
-     * Gets Ignite configuration file.
-     *
-     * @return Configuration file.
-     */
-    public String getIgniteConfigFile() {
-        return igniteCfgFile;
-    }
 
     /**
      * Obtains data flush frequency.
@@ -87,14 +62,9 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
 
     /**
      * Default IgniteSink constructor.
-     *
-     * @param cacheName Cache name.
-     * @param igniteCfgFile Ignite configuration file.
      */
-    public IgniteSink(String cacheName, String igniteCfgFile) {
-        this.cacheName = cacheName;
-        this.igniteCfgFile = igniteCfgFile;
-        this.log = IgniteSink.SinkContext.getIgnite().log();
+    public IgniteSink() {
+        this.log = SinkContext.INSTANCE.getIgnite().log();
     }
 
     /**
@@ -104,11 +74,9 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
      */
     @SuppressWarnings("unchecked")
     public void start() throws IgniteException {
-        A.notNull(igniteCfgFile, "Ignite config file");
-        A.notNull(cacheName, "Cache name");
 
-        IgniteSink.SinkContext.getStreamer().autoFlushFrequency(autoFlushFrequency);
-        IgniteSink.SinkContext.getStreamer().allowOverwrite(allowOverwrite);
+        SinkContext.INSTANCE.getStreamer().autoFlushFrequency(autoFlushFrequency);
+        SinkContext.INSTANCE.getStreamer().allowOverwrite(allowOverwrite);
 
         stopped = false;
     }
@@ -124,9 +92,9 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
 
         stopped = true;
 
-        IgniteSink.SinkContext.getStreamer().close();
-        IgniteSink.SinkContext.getIgnite().cache(cacheName).close();
-        IgniteSink.SinkContext.getIgnite().close();
+        SinkContext.INSTANCE.getStreamer().close();
+        SinkContext.INSTANCE.getIgnite().cache("DemoCache").close();
+        SinkContext.INSTANCE.getIgnite().close();
     }
 
     /**
@@ -142,25 +110,22 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
             if (!(in instanceof Map))
                 throw new IgniteException("Map as a streamer input is expected!");
 
-            IgniteSink.SinkContext.getStreamer().addData((Map)in);
+            SinkContext.INSTANCE.getStreamer().addData((Map)in);
         }
         catch (Exception e) {
-            log.error("Error while processing IN of " + cacheName, e);
+            log.error("Error while processing IN of DemoCache", e);
         }
     }
 
-    /**
-     * Streamer context initializing grid and data streamer instances on demand.
-     */
-    private static class SinkContext {
-        /** Constructor. */
-        private SinkContext() {
-        }
+    private enum SinkContext {
+        INSTANCE;
 
-        /** Instance holder. */
-        private static class Holder {
-            private static final Ignite IGNITE = Ignition.start("flink-config.xml");
-            private static final IgniteDataStreamer STREAMER = IGNITE.dataStreamer("DemoCache");
+        private Ignite ignite;
+        private IgniteDataStreamer streamer;
+
+        SinkContext() {
+            ignite = Ignition.start("flink-config.xml");
+            streamer = ignite.dataStreamer("DemoCache");
         }
 
         /**
@@ -168,8 +133,8 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
          *
          * @return Grid instance.
          */
-        private static Ignite getIgnite() {
-            return IgniteSink.SinkContext.Holder.IGNITE;
+        private Ignite getIgnite() {
+            return ignite;
         }
 
         /**
@@ -177,8 +142,8 @@ public class IgniteSink<IN> extends RichSinkFunction<IN> {
          *
          * @return Data streamer instance.
          */
-        private static IgniteDataStreamer getStreamer() {
-            return IgniteSink.SinkContext.Holder.STREAMER;
+        private IgniteDataStreamer getStreamer() {
+            return streamer;
         }
     }
 }
